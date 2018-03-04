@@ -1,0 +1,87 @@
+#include <ESP8266WiFi.h>
+#include <WebSocketClient.h>
+ 
+char ssid[]     = "xxxxxxxxxxxxxxx";
+char password[] = "xxxxxxxxxxxxxxxxxxx";
+ 
+char path[] = "/message";
+char host[] = "192.168.1.5";
+ 
+WebSocketClient webSocketClient;
+WiFiClient client;
+ 
+void setup() {
+  Serial.begin(115200);
+  // Debug console
+  pinMode(D1,OUTPUT);
+  pinMode(D2,OUTPUT);
+  //pinMode(D3,OUTPUT);
+  //pinMode(D4,OUTPUT);
+
+  digitalWrite(D1,HIGH);
+  digitalWrite(D2,HIGH);
+  //digitalWrite(D3,HIGH);
+  //digitalWrite(D4,HIGH);
+ 
+  WiFi.begin(ssid, password);
+ 
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+ 
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+ 
+  delay(5000);
+ 
+  if (client.connect(host, 1337)) {
+    Serial.println("Connected");
+  } else {
+    Serial.println("Connection failed.");
+  }
+ 
+  webSocketClient.path = path;
+  webSocketClient.host = host;
+  if (webSocketClient.handshake(client)) {
+    Serial.println("Handshake successful");
+  } else {
+    Serial.println("Handshake failed.");
+  }
+ 
+}
+ 
+void loop() {
+  String data;
+ 
+  if (client.connected()) {
+ 
+    webSocketClient.sendData("Info to be echoed back");
+ 
+    webSocketClient.getData(data);
+    if (data.length() > 0) {
+      Serial.print("Received data: ");
+      Serial.println(data);
+      if(data=="onlight"){
+          digitalWrite(D2,LOW);
+        }
+        if(data=="offlight"){
+          digitalWrite(D2,HIGH);
+        }
+        if(data=="onFan"){
+          digitalWrite(D1,LOW);
+        }
+        if(data=="offFan"){
+          digitalWrite(D1,HIGH);
+        }
+    } 
+ 
+  } else {
+    Serial.println("Client disconnected.");
+  }
+ 
+  delay(3000);
+ 
+}
